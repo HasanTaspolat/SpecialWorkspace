@@ -31,7 +31,7 @@ class Upload{
             {
                 $this->error = "too big";
             }else {
-                $this->filename = sha1("CTIS 2021" . uniqid() . $ext); // sha1 generate String with 40 characters
+                $this->filename = sha1("Project 256" . uniqid() . $ext); // sha1 generate String with 40 characters
                 //$this->$filename;
                 if( !move_uploaded_file($tmp_name, $uploadFolder . "/" . $this->filename)){
                     $this->error = "system error";

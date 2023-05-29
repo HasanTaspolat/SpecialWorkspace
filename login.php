@@ -18,7 +18,7 @@
         if ( password_verify($password, $user["password"])){
             //echo "user authenticated"; 
             $_SESSION["user"] = $user; // login.php puts user data in global persistent data area 
-            header("Location: main.php");
+            header("Location: timeline.php");
             exit;
         }
     }else{

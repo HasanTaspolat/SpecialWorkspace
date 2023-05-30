@@ -1,7 +1,34 @@
 <?php
-
+require_once "./db.php";
+require_once "./Upload.php";
+session_start(); // 
 // add the fetch in here
+if (!isset($_SESSION['user'])) {
+    echo 'You must be logged in to perform this action.';
+    exit;
+}
 
+$currentUser = $_SESSION['user']['id'];
+
+$friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
+$friendsStmt->execute(['currentUser' => $currentUser]);
+$friendRows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$friendIds = [];
+foreach ($friendRows as $row) {
+    $friendId = $row['sender_id'] == $currentUser ? $row['receiver_id'] : $row['sender_id'];
+    $friendIds[] = $friendId;
+}
+
+// Fetch posts of friends
+if (!empty($friendIds)) {
+    $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
+    $postsStmt = $db->prepare("SELECT * FROM posts WHERE user_id IN ($inQuery) ORDER BY timestamp DESC LIMIT 10");
+    $postsStmt->execute($friendIds);
+    $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $posts = [];
+}
 
 ?>
 
@@ -14,26 +41,37 @@
     <link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 </head>
-
+<style>
+.post-image {
+    max-width: 100%;
+    height: auto;
+}
+</style>
 <body>
     <!-- Add navigation bar, header, etc. here -->
 
     <!-- Timeline posts -->
     <div id="timeline" class="container">
         <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
-        <?php if (isset($posts)) foreach ($posts as $post) : ?>
-            <div class="post card">
-                <div class="card-content">
-                    <span class="card-title"><?php echo $post['title']; ?></span>
-                    <p><?php echo $post['content']; ?></p>
-                    <!-- Add post image here if exists -->
+        <?php if (!empty($posts)) foreach ($posts as $post) : ?>
+            <div class="col s12 m4">
+                <div class="card" style="border-radius: 7px; overflow: hidden;">
+                    <div class="card-image waves-effect waves-block waves-light">
+                        <?php if ($post['image']) : ?>
+                            <img class="activator post-image" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div class="card-content grey lighten-3 black-text">
+                        <span class="card-title activator black-text">
+                            <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
+                            <i class="material-icons right">more_vert</i>
+                        </span>
+                    </div>
+                    <div class="card-action grey lighten-3">
+                        <a href="#" class="like">Like</a>
+                        <a href="#" class="unlike">Unlike</a>
+                    </div>
                 </div>
-                <div class="card-action">
-                    <!-- Add like and unlike buttons here -->
-                    <a href="#" class="like">Like</a>
-                    <a href="#" class="unlike">Unlike</a>
-                </div>
-                <!-- Add comments here -->
             </div>
         <?php endforeach; ?>
 
@@ -103,7 +141,7 @@
 
                             // Create a new post element
                             var newPostHtml = `
-                            <div class="col s12 m8">
+                            <div class="col s8 m2">
                     <div class="card" style="border-radius: 7px; overflow: hidden;">
                         <div class="card-image waves-effect waves-block waves-light">
                             ${post.image ? '<img class="activator" src="images/' + post.image + '">' : ''}
@@ -129,7 +167,7 @@
                     });
                 });
 
-                $('.add-friend').on('click', function() {
+                $(document).on('click', '.add-friend', function() {
                     console.log("buraya girdi");
                     var userId = $(this).data('user-id'); // Get user ID from data attribute
 

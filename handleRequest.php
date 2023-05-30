@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo 'Friend request already sent.';
         exit;
     }
-
     // Create new friend request
     $stmt = $db->prepare("INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES (:sender_id, :receiver_id, 0)");
     $stmt->execute(['sender_id' => $sender_id, 'receiver_id' => $receiver_id]);

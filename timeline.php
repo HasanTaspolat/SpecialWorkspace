@@ -1,3 +1,10 @@
+<?php
+
+// add the fetch in here
+
+
+?>
+
 <!DOCTYPE html>
 <html>
 
@@ -13,7 +20,7 @@
 
     <!-- Timeline posts -->
     <div id="timeline" class="container">
-    <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
+        <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
         <?php if (isset($posts)) foreach ($posts as $post) : ?>
             <div class="post card">
                 <div class="card-content">
@@ -36,9 +43,28 @@
             <button id="search-button" class="btn waves-effect waves-light purple lighten-3"><i class="material-icons">search</i></button>
         </div>
         <div id="search-results" class="row" style="border: 2px solid #D1C4E9; border-radius: 7px;"></div>
+        <div class="container">
+            <form id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
+                <div class="input-field">
+                    <textarea id="post-text" class="materialize-textarea" name="text"></textarea>
+                    <label for="post-text">Share something...</label>
+                </div>
+
+                <div class="file-field input-field">
+                    <div class="btn purple lighten-3">
+                        <span>Upload</span>
+                        <input type="file" name="imagename">
+                    </div>
+                    <div class="file-path-wrapper">
+                        <input class="file-path validate" type="text" placeholder="Upload your image">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn waves-effect waves-light purple lighten-3">Post</button>
+            </form>
+        </div>
 
 
-        <!-- Include jQuery, Materialize, and your own script file -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
@@ -54,6 +80,51 @@
                         success: function(response) {
                             // Display the search results
                             $('#search-results').html(response);
+                        }
+                    });
+                });
+                $('#post-form').on('submit', function(e) {
+                    e.preventDefault();
+
+                    var formData = new FormData();
+                    formData.append('text', $('#post-text').val());
+                    formData.append('imagename', $('input[type=file]')[0].files[0]);
+
+                    $.ajax({
+                        url: 'handlePost.php', // Server script to process the post
+                        type: 'post',
+                        data: formData,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            // Parse the response (assuming it's in JSON format)
+                            var post = JSON.parse(response);
+
+                            // Create a new post element
+                            var newPostHtml = `
+                            <div class="col s12 m8">
+                    <div class="card" style="border-radius: 7px; overflow: hidden;">
+                        <div class="card-image waves-effect waves-block waves-light">
+                            ${post.image ? '<img class="activator" src="images/' + post.image + '">' : ''}
+                        </div>
+                        <div class="card-content black lighten-3">
+                            <span class="card-title activator grey-text text-darken-4">Your Post: ${post.content}<i class="material-icons right">more_vert</i></span>
+                        </div>
+                        <div class="card-action black lighten-3">
+                            <a href="#" class="like">Like</a>
+                            <a href="#" class="unlike">Unlike</a>
+                        </div>
+                    </div>
+                </div>`;
+
+                            // Prepend the new post to the timeline
+                            $('#timeline').prepend(newPostHtml);
+                        },
+
+                        error: function(xhr, status, error) {
+                            // Handle any errors
+                            console.error(error);
                         }
                     });
                 });

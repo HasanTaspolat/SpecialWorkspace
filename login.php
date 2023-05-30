@@ -9,7 +9,6 @@
     var_dump($_FILES);
     $rs = $db->prepare("select * from user where email = ?");
     $rs->execute([$email]);
-
     if( $rs->rowCount() === 1){ 
         // valid email address
         // checks if there is a user as for that email address?
@@ -25,8 +24,6 @@
         echo "no user with that email address";
     }
 
-    $_SESSION["message"] = "Login Failed!";
+    $_SESSION["message"] = "Login is failed! Check your credentials!";
     //header("Location : index.php?err=login failed");
     header("Location: index.php");
-
-?>

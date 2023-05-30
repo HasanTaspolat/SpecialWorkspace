@@ -1,8 +1,8 @@
 <?php
 
-    session_start();
+session_start();
 
-    require_once "./auth.php";
+require_once "./auth.php";
 
 if (!empty($_POST)) {
     extract($_POST);
@@ -11,11 +11,11 @@ if (!empty($_POST)) {
     require_once "./Upload.php";
 
     // Parse email addresses in free text.
-    $re = '/(\w+)@((?:\w+\.){1,3}(?:com|tr))/iu' ;
-    if ( preg_match($re, $email) === 0) {
-        $_SESSION["message"] = "Please enter valid email!"; 
+    $re = '/(\w+)@((?:\w+\.){1,3}(?:com|tr))/iu';
+    if (preg_match($re, $email) === 0) {
+        $_SESSION["message"] = "Please enter valid email!";
         $_SESSION["email"] = $email;
-      }
+    }
 
     $upload = new Upload("profile", "images");
 
@@ -38,13 +38,14 @@ if (!empty($_POST)) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Title of the document</title>
+    <title>Project</title>
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <style>
-          .container {
+        .container {
             margin-top: 100px;
         }
 
@@ -84,7 +85,8 @@ if (!empty($_POST)) {
             font-weight: bold;
             font-family: Arial, Helvetica, sans-serif;
         }
-        #icon{
+
+        #icon {
             color: greenyellow;
         }
     </style>
@@ -92,7 +94,7 @@ if (!empty($_POST)) {
 
 <body>
     <nav>
-    <div class="nav-wrapper green">
+        <div class="nav-wrapper green">
             <a href="index.php" class="brand-logo center"><span id="forg"> Forget</span><span id="me" class="class=" orange lighten-1>Me? </span></a>
 
         </div>
@@ -101,23 +103,23 @@ if (!empty($_POST)) {
     <div class="container">
         <form action="" method="post" enctype="multipart/form-data">
             <div class="input-field">
-                <input name="username" id="username" type="text" class="validate" value=" <?= isset($username) ? filter_var($username, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : "" ?>  "  >
+                <input name="username" id="username" type="text" class="validate" value=" <?= isset($username) ? filter_var($username, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : "" ?>">
                 <label for="username">Name Lastname</label>
             </div>
 
             <div class="input-field">
-                <input name="email" id="email" type="text" class="validate" value=" <?= isset($email) ? filter_var($email, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : "" ?>  " >
+                <input name="email" id="email" type="text" class="validate" value=" <?= isset($email) ? filter_var($email, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : "" ?>">
                 <label for="email">Email</label>
             </div>
 
 
             <div class="input-field">
-                <input name="password" id="password" type="text" class="validate" >
+                <input name="password" id="password" type="text" class="validate">
                 <label for="password">Password</label>
             </div>
 
             <div class="file-field input-field">
-                <div id="FileButton"  class="btn">
+                <div id="FileButton" class="btn">
                     <span>File</span>
                     <input type="file" name="profile">
                 </div>
@@ -126,8 +128,8 @@ if (!empty($_POST)) {
                 </div>
             </div>
 
-            <div  class="center">
-                <button id="RegisterButton"  class="btn waves-effect waves-light" type="submit" name="action">Register
+            <div class="center">
+                <button id="RegisterButton" class="btn waves-effect waves-light" type="submit" name="action">Register
                     <i class="material-icons right">send</i>
                 </button>
             </div>
@@ -137,13 +139,13 @@ if (!empty($_POST)) {
     </div>
 
     <?php
-  if (isset($_SESSION["message"])) {
-    $err = $_SESSION["message"]; // I've consuemd that message! dont forget to unset it
-    echo "<script> M.toast({html: '$err'}); </script>";
-    // delete key value pair, in case delete the message from the session
-    unset($_SESSION["message"]);
-  }
-  ?>
+    if (isset($_SESSION["message"])) {
+        $err = $_SESSION["message"]; // I've consuemd that message! dont forget to unset it
+        echo "<script> M.toast({html: '$err'}); </script>";
+        // delete key value pair, in case delete the message from the session
+        unset($_SESSION["message"]);
+    }
+    ?>
 
     <script>
         $(function() {

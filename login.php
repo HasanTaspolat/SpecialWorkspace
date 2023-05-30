@@ -28,5 +28,3 @@
     $_SESSION["message"] = "Login Failed!";
     //header("Location : index.php?err=login failed");
     header("Location: index.php");
-
-?>

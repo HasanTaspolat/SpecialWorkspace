@@ -13,7 +13,7 @@
 
     <!-- Timeline posts -->
     <div id="timeline" class="container">
-        <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
+    <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
         <?php if (isset($posts)) foreach ($posts as $post) : ?>
             <div class="post card">
                 <div class="card-content">
@@ -37,11 +37,6 @@
         </div>
         <div id="search-results" class="row" style="border: 2px solid #D1C4E9; border-radius: 7px;"></div>
 
-        <!-- Friend Requests -->
-        <div id="friend-requests" class="container">
-            <h4>Friend Requests</h4>
-            <ul id="friend-requests-list" class="collection"></ul>
-        </div>
 
         <!-- Include jQuery, Materialize, and your own script file -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -63,46 +58,63 @@
                     });
                 });
 
-                // Event delegation for add-friend button inside search-results
-                $('#search-results').on('click', '.add-friend', function() {
+                $('.add-friend').on('click', function() {
+                    console.log("buraya girdi");
                     var userId = $(this).data('user-id'); // Get user ID from data attribute
 
                     // AJAX request
                     $.ajax({
                         url: 'handleRequest.php', // URL of the PHP script
-                        type: 'POST',
+                        type: 'post', // Request method
                         data: {
                             receiver_id: userId
+                        }, // Data to be sent to the server
+                        success: function(response) { // A function to be called if request succeeds
+                            alert(response); // Display the result
                         },
-                        success: function(response) {
-                            // Display the result
-                            alert(response);
-                            console.log(response);
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            // Handle error
+                        error: function(jqXHR, textStatus, errorThrown) { // A function to be called if request fails
                             console.error('Error: ' + textStatus, errorThrown);
                         }
                     });
                 });
 
-                // Load friend requests on page load
-                loadFriendRequests();
-
-                // Function to load friend requests
-                function loadFriendRequests() {
+                $('#loadMore').on('click', function() {
                     $.ajax({
-                        url: 'loadFriendRequests.php', // You need to create this PHP script
-                        type: 'GET',
-                        success: function(response) {
-                            // Display the friend requests
-                            $('#friend-requests-list').html(response);
+                        url: 'load_more_posts.php', // You need to create this file
+                        type: 'POST',
+                        data: {
+                            last_id: lastPostId
                         },
+                        success: function(response) {
+                            // Parse response (which should be in JSON format) and append posts to timeline
+                            let posts = JSON.parse(response);
+                            posts.forEach(post => {
+                                let postHtml = `
+                                <div class="post card">
+                                    <div class="card-content">
+                                        <span class="card-title">${post.title}</span>
+                                        <p>${post.content}</p>
+                                    </div>
+                                    <div class="card-action">
+                                        <a href="#" class="like">Like</a>
+                                        <a href="#" class="unlike">Unlike</a>
+                                    </div>
+                                </div>`;
+                                $('#timeline').append(postHtml);
+                            });
+
+                            if (posts.length > 0) {
+                                lastPostId = posts[posts.length - 1].id;
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            // Handle error
+                            console.error(error);
+                        }
                     });
-                }
+                });
             });
         </script>
-    </div>
 </body>
 
 </html>

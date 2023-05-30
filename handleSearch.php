@@ -2,11 +2,11 @@
 session_start();
 require_once "./db.php";
 
+
 if (!isset($_SESSION['user'])) {
     echo 'You must be logged in to perform this action.';
     exit;
 }
-
 
 $searchQuery = $_GET['query'] ?? '';
 
@@ -25,7 +25,7 @@ if (count($results) > 0) {
         echo '<div class="col s12 m4">';
         echo '<div class="card" style="border-radius: 7px; overflow: hidden;">';
         echo '<div class="card-image waves-effect waves-block waves-light">';
-        echo '<img class="activator" src="?id=' . htmlspecialchars($user['id'], ENT_QUOTES, 'UTF-8') . '">'; // This needs to point to the current script
+        echo '<img class="activator" src="images/' . htmlspecialchars($user['profile'], ENT_QUOTES, 'UTF-8') . '">';
         echo '</div>';
         echo '<div class="card-content purple lighten-3">';
         echo '<span class="card-title activator grey-text text-darken-4">Name: ' . htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8') . '<i class="material-icons right">more_vert</i></span>';

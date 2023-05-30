@@ -9,7 +9,6 @@ if (!isset($_SESSION['user'])) {
 }
 
 $currentUser = $_SESSION['user']['id'];
-
 $friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
 $friendsStmt->execute(['currentUser' => $currentUser]);
 $friendRows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -29,6 +28,9 @@ if (!empty($friendIds)) {
 } else {
     $posts = [];
 }
+$stmt = $db->prepare("SELECT * FROM friend_requests WHERE receiver_id = :user_id AND status = 0");
+$stmt->execute([':user_id' => $_SESSION['user']['id']]);
+$friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -53,6 +55,26 @@ if (!empty($friendIds)) {
     <!-- Timeline posts -->
     <div id="timeline" class="container">
         <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
+        <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger"><i class="material-icons">notifications</i></a>
+
+<!-- Modal Structure -->
+<div id="modal-friend-requests" class="modal">
+    <div class="modal-content">
+        <h4>Friend Requests</h4>
+        <?php if (!empty($friendRequests)) : ?>
+            <ul class="collection">
+                <?php foreach ($friendRequests as $request) : ?>
+                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') // Replace this with sender's name ?></li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <p>No new friend requests.</p>
+        <?php endif; ?>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+</div>
         <?php if (!empty($posts)) foreach ($posts as $post) : ?>
             <div class="col s12 m4">
                 <div class="card" style="border-radius: 7px; overflow: hidden;">
@@ -166,7 +188,7 @@ if (!empty($friendIds)) {
                         }
                     });
                 });
-
+                $('.modal').modal();
                 $(document).on('click', '.add-friend', function() {
                     console.log("buraya girdi");
                     var userId = $(this).data('user-id'); // Get user ID from data attribute

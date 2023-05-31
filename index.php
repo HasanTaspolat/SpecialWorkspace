@@ -25,7 +25,7 @@ require_once "./auth.php";
     </div>
   </nav>
   <div class="container">
-    <p class="log-text">Login from here:</p>
+    <p class="log-text-2">Login from here:</p>
     <form action="login.php" method="POST">
       <div class="input-field input">
         <i class="material-icons prefix icon-white">account_box</i>

@@ -62,7 +62,7 @@ if (!empty($friendIDs)) {
     <link rel="stylesheet" href="css/index.css">
 </head>
 
-<body>
+<body class="all-body">
     <nav class="all-nav">
         <div class="header-all">
             <div class="project-name">FREE-END</div>
@@ -73,7 +73,7 @@ if (!empty($friendIDs)) {
         <div><i id="icon" class="material-icons exit-icon">exit_to_app</i> </div>
     </a>
     <div id="timeline" class="cont-timeline">
-    <div id="search" class="input-field all-sections">
+        <div id="search" class="input-field all-sections">
             <div class="search-section">
                 <input id="search-input" type="text" class="validate" style="  border-bottom: 1px solid #ffffff; width: 300px; " placeholder="  Search for friends...">
                 <button id="search-button" class="btn waves-effect waves-light purple lighten-3 button-search"><i class="material-icons">search</i></button>
@@ -81,45 +81,44 @@ if (!empty($friendIDs)) {
             <div class="top-search-section">
                 <div class="logout-section">
                     <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger friend-modal button-image-profile"><i class="material-icons">notifications</i></a>
-                    <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger"><i class="material-icons">group</i></a>
+                    <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile"><i class="material-icons">group</i></a>
                 </div>
-                <div id="modal-friends" class="modal">
-    <div class="modal-content">
-        <h4>Friends</h4>
-        <?php if (!empty($friends)) : ?>
-            <ul class="collection">
-                <?php foreach ($friends as $friend) : ?>
-                    <li class="collection-item avatar">
-                        <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
-                        <span class="title"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
-                        <p><?= htmlspecialchars($friend['email'], ENT_QUOTES, 'UTF-8') ?></p>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>No friends to show.</p>
-        <?php endif; ?>
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
-    </div>
-</div>
-                <div id="modal-friend-requests" class="modal">
+                <div id="modal-friends" class="modal friend-req-modal">
                     <div class="modal-content">
-                        <h4>Friend Requests</h4>
-                        <?php if (!empty($friendRequests)) : ?>
+                        <h4 class="modal-text">Friends</h4>
+                        <?php if (!empty($friends)) : ?>
                             <ul class="collection">
-                                <?php foreach ($friendRequests as $request) : ?>
-                                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') // Replace this with sender's name 
-                                                                ?></li>
+                                <?php foreach ($friends as $friend) : ?>
+                                    <li class="collection-item avatar">
+                                        <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
+                                        <span class="title modal-text"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <p class="modal-text"><?= htmlspecialchars($friend['email'], ENT_QUOTES, 'UTF-8') ?></p>
+                                    </li>
                                 <?php endforeach; ?>
                             </ul>
                         <?php else : ?>
-                            <p>No new friend requests.</p>
+                            <p class="modal-text">No friends to show.</p>
                         <?php endif; ?>
                     </div>
                     <div class="modal-footer">
-                        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
+                        <a href="#" class="modal-close waves-effect waves-green btn-flat modal-text">Close</a>
+                    </div>
+                </div>
+                <div id="modal-friend-requests" class="modal friend-req-modal">
+                    <div class="modal-content">
+                        <h4 class="modal-text">Friend Requests</h4>
+                        <?php if (!empty($friendRequests)) : ?>
+                            <ul class="collection modal-text">
+                                <?php foreach ($friendRequests as $request) : ?>
+                                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else : ?>
+                            <p class="modal-text">No new friend requests.</p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="modal-close waves-effect waves-green btn-flat modal-text">Close</a>
                     </div>
                 </div>
 
@@ -143,28 +142,29 @@ if (!empty($friendIDs)) {
                 <button type="submit" class="btn waves-effect waves-light purple lighten-3 button-image-profile btn-width">Post</button>
             </form>
         </div>
-
-        <?php if (!empty($posts)) foreach ($posts as $post) : ?>
-            <div class="col s12 m4">
-                <div class="card" style="border-radius: 7px; overflow: hidden;">
-                    <div class="card-image waves-effect waves-block waves-light">
-                        <?php if ($post['image']) : ?>
-                            <img class="activator post-image" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
-                        <?php endif; ?>
-                    </div>
-                    <div class="card-content grey lighten-3 black-text">
-                        <span class="card-title activator black-text">
-                            <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
-                            <i class="material-icons right">more_vert</i>
-                        </span>
-                    </div>
-                    <div class="card-action grey lighten-3">
-                        <a href="#" class="like">Like</a>
-                        <a href="#" class="unlike">Unlike</a>
+        <div class="all-cards row">
+            <?php if (!empty($posts)) foreach ($posts as $post) : ?>
+                <div class="col s4 card-width">
+                    <div class="card">
+                        <div class="card-image waves-effect waves-block waves-light">
+                            <?php if ($post['image']) : ?>
+                                <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
+                            <?php endif; ?>
+                        </div>
+                        <div class="card-content grey lighten-3 black-text">
+                            <span class="card-title activator black-text">
+                                <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
+                            </span>
+                        </div>
+                        <div class="card-action grey lighten-3">
+                            <a href="#" class="like button-image-profile  btn-width like-unlike">Like</a>
+                            <a href="#" class="unlike button-image-profile  btn-width  like-unlike">Unlike</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
+
 
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>

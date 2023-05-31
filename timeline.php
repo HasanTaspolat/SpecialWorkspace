@@ -37,6 +37,16 @@ if (!empty($friendIDs)) {
     $stmt->execute();
     $friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+function getCommentsForPost($postId, $db) {
+    $stmt = $db->prepare("
+        SELECT * FROM comments 
+        WHERE post_id = ?
+        ORDER BY timestamp DESC
+    ");
+    $stmt->execute([$postId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
 
 <!DOCTYPE html>
@@ -154,8 +164,17 @@ if (!empty($friendIDs)) {
                         </div>
                         <div class="card-content grey lighten-3">
                             <h5>Comments</h5>
-                            <ul class="comments-list">
-                                <!-- Comments will be loaded here with AJAX -->
+                            <ul id="comments-list-<?= $post['id'] ?>">
+                                <?php
+                                $comments = getCommentsForPost($post['id'], $db);
+                                foreach ($comments as $comment) :
+                                ?>
+                                    <li>
+                                        <span><strong><?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?>:</strong></span>
+                                        <?= htmlspecialchars($comment['comment'], ENT_QUOTES, 'UTF-8') ?>
+                                        <span class="timestamp" style="font-size: 6px;"> <?= $comment['timestamp'] ?></span>
+                                    </li>
+                                <?php endforeach; ?>
                             </ul>
                             <div class="input-field">
                                 <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
@@ -175,6 +194,32 @@ if (!empty($friendIDs)) {
 
         <script>
             $(document).ready(function() {
+                $('.add-comment').click(function(e) {
+                    e.preventDefault();
+
+                    var postId = $(this).data('post-id');
+                    var commentText = $('#comment-' + postId).val();
+
+                    $.ajax({
+                        url: 'handleComment.php',
+                        method: 'post',
+                        data: {
+                            post_id: postId,
+                            comment: commentText
+                        },
+                        success: function(response) {
+                            var comment = JSON.parse(response);
+                            var addcomment = `<li> <span> ${comment.username}: </span>
+                            ${comment.comment}
+                            <span style="font-size: 9px"> Just now. <span>
+                            `;
+                            $('.comments-list-' + postId).prepend(addcomment);
+                        },
+                        error: function() {
+                            alert('An error occurred while adding the comment.');
+                        }
+                    });
+                });
                 $('#search-button').on('click', function() {
                     $.ajax({
                         url: 'handleSearch.php', // You need to create this PHP script

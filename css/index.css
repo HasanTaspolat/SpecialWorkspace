@@ -16,6 +16,7 @@ body {
 .cont-timeline {
     padding-top: 20px;
     margin: 0 auto;
+    max-width: 500px;
 }
 
 .cont-timeline-second {

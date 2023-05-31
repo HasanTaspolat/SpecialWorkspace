@@ -27,25 +27,13 @@ $stmt = $db->prepare("SELECT * FROM friend_requests WHERE receiver_id = :user_id
 $stmt->execute([':user_id' => $_SESSION['user']['id']]);
 $friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $db->prepare("
-    SELECT 
-        CASE
-            WHEN sender_id = :user_id THEN receiver_id
-            ELSE sender_id
-        END AS user_id
-    FROM friend_requests
-    WHERE status = 2 AND (sender_id = :user_id OR receiver_id = :user_id)
-");
+$stmt = $db->prepare("SELECT CASE WHEN sender_id = :user_id THEN receiver_id ELSE sender_id END AS user_id FROM friend_requests WHERE status = 2 AND (sender_id = :user_id OR receiver_id = :user_id)");
 $stmt->execute([':user_id' => $_SESSION['user']['id']]);
 $friendIDs = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 $friends = [];
 if (!empty($friendIDs)) {
-    $stmt = $db->prepare("
-        SELECT id, name, email, profile
-        FROM user
-        WHERE id IN (" . implode(',', $friendIDs) . ")
-    ");
+    $stmt = $db->prepare("SELECT id, name, email, profile FROM user WHERE id IN (" . implode(',', $friendIDs) . ")");
     $stmt->execute();
     $friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -155,10 +143,25 @@ if (!empty($friendIDs)) {
                             <span class="card-title activator black-text">
                                 <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
                             </span>
+                            <span><i class="material-icons">thumb_up</i>:</span>
+                            <span><i class="material-icons">thumb_down</i>:</span>
+
+
                         </div>
                         <div class="card-action grey lighten-3">
-                            <a href="#" class="like button-image-profile  btn-width like-unlike">Like</a>
-                            <a href="#" class="unlike button-image-profile  btn-width  like-unlike">Unlike</a>
+                            <a href="#" class="like button-image-profile  btn-width like-unlike" data-post-id="<?= $post['id'] ?>"> Like</a>
+                            <a href="#" class="unlike button-image-profile  btn-width  like-unlike" data-post-id="<?= $post['id'] ?>"> Unlike</a>
+                        </div>
+                        <div class="card-content grey lighten-3">
+                            <h5>Comments</h5>
+                            <ul class="comments-list">
+                                <!-- Comments will be loaded here with AJAX -->
+                            </ul>
+                            <div class="input-field">
+                                <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
+                                <label for="comment-<?= $post['id'] ?>">Add a comment...</label>
+                                <button class="add-comment btn waves-effect waves-light" data-post-id="<?= $post['id'] ?>">Comment</button>
+                            </div>
                         </div>
                     </div>
                 </div>

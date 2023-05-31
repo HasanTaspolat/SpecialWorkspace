@@ -2,24 +2,19 @@
 require_once "./db.php";
 require_once "./Upload.php";
 session_start(); // 
-// add the fetch in here
 if (!isset($_SESSION['user'])) {
     echo 'You must be logged in to perform this action.';
     exit;
 }
-
 $currentUser = $_SESSION['user']['id'];
 $friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
 $friendsStmt->execute(['currentUser' => $currentUser]);
 $friendRows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
-
 $friendIds = [];
 foreach ($friendRows as $row) {
     $friendId = $row['sender_id'] == $currentUser ? $row['receiver_id'] : $row['sender_id'];
     $friendIds[] = $friendId;
 }
-
-// Fetch posts of friends
 if (!empty($friendIds)) {
     $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
     $postsStmt = $db->prepare("SELECT * FROM posts WHERE user_id IN ($inQuery) ORDER BY timestamp DESC LIMIT 10");
@@ -31,7 +26,6 @@ if (!empty($friendIds)) {
 $stmt = $db->prepare("SELECT * FROM friend_requests WHERE receiver_id = :user_id AND status = 0");
 $stmt->execute([':user_id' => $_SESSION['user']['id']]);
 $friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
 
 <!DOCTYPE html>
@@ -42,39 +36,20 @@ $friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
-<style>
-.post-image {
-    max-width: 100%;
-    height: auto;
-}
-</style>
+
 <body>
-    <!-- Add navigation bar, header, etc. here -->
-
-    <!-- Timeline posts -->
-    <div id="timeline" class="container">
-        <a href="logout.php">LOGOUT FROM APP<i id="icon" class="material-icons">exit_to_app</i></a>
-        <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger"><i class="material-icons">notifications</i></a>
-
-<!-- Modal Structure -->
-<div id="modal-friend-requests" class="modal">
-    <div class="modal-content">
-        <h4>Friend Requests</h4>
-        <?php if (!empty($friendRequests)) : ?>
-            <ul class="collection">
-                <?php foreach ($friendRequests as $request) : ?>
-                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') // Replace this with sender's name ?></li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>No new friend requests.</p>
-        <?php endif; ?>
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
-    </div>
-</div>
+    <nav class="all-nav">
+        <div class="header-all">
+            <div class="project-name">FREE-END</div>
+        </div>
+    </nav>
+    <a class="log-text" href="logout.php">
+        <div class="logout-text"> LOGOUT </div>
+        <div><i id="icon" class="material-icons exit-icon">exit_to_app</i> </div>
+    </a>
+    <div id="timeline" class="cont-timeline">
         <?php if (!empty($posts)) foreach ($posts as $post) : ?>
             <div class="col s12 m4">
                 <div class="card" style="border-radius: 7px; overflow: hidden;">
@@ -96,31 +71,53 @@ $friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
         <?php endforeach; ?>
+        <div id="search" class="input-field all-sections">
+            <div class="search-section">
+                <input id="search-input" type="text" class="validate" style="  border-bottom: 1px solid #ffffff; width: 300px; " placeholder="  Search for friends...">
+                <button id="search-button" class="btn waves-effect waves-light purple lighten-3 button-search"><i class="material-icons">search</i></button>
+            </div>
+            <div class="top-search-section">
+                <div class="logout-section">
+                    <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger friend-modal button-image-profile"><i class="material-icons">notifications</i></a>
 
-        <div id="search" class="input-field">
-            <input id="search-input" type="text" class="validate" style="width: 300px; border: 2px solid #D1C4E9; border-radius: 7px;">
-            <label for="search-input" class="purple-text text-lighten-3">Search for friends...</label>
-            <button id="search-button" class="btn waves-effect waves-light purple lighten-3"><i class="material-icons">search</i></button>
+                </div>
+                <div id="modal-friend-requests" class="modal">
+                    <div class="modal-content">
+                        <h4>Friend Requests</h4>
+                        <?php if (!empty($friendRequests)) : ?>
+                            <ul class="collection">
+                                <?php foreach ($friendRequests as $request) : ?>
+                                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') // Replace this with sender's name 
+                                                                ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else : ?>
+                            <p>No new friend requests.</p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
+                    </div>
+                </div>
+
+            </div>
         </div>
-        <div id="search-results" class="row" style="border: 2px solid #D1C4E9; border-radius: 7px;"></div>
-        <div class="container">
-            <form id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
-                <div class="input-field">
-                    <textarea id="post-text" class="materialize-textarea" name="text"></textarea>
-                    <label for="post-text">Share something...</label>
+        <div class="cont-timeline-second">
+            <form class="form-section" id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
+                <div class="input-field input-share">
+                    <textarea class="text-area" id="post-text" class="materialize-textarea" name="text" placeholder="Share something.."></textarea>
                 </div>
 
                 <div class="file-field input-field">
-                    <div class="btn purple lighten-3">
+                    <div class="btn button-image-profile purple lighten-3 btn-width">
                         <span>Upload</span>
                         <input type="file" name="imagename">
                     </div>
                     <div class="file-path-wrapper">
-                        <input class="file-path validate" type="text" placeholder="Upload your image">
+                        <input class="file-path validate image-input" type="text" placeholder="Upload your image">
                     </div>
                 </div>
-
-                <button type="submit" class="btn waves-effect waves-light purple lighten-3">Post</button>
+                <button type="submit" class="btn waves-effect waves-light purple lighten-3 button-image-profile btn-width">Post</button>
             </form>
         </div>
 

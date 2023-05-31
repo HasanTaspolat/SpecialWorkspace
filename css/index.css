@@ -13,6 +13,42 @@ body {
     padding: 240px;
 }
 
+.cont-timeline {
+    padding-top: 20px;
+    margin: 0 auto;
+}
+
+.cont-timeline-second {
+    padding-top: 20px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.text-area {
+    border: none;
+    border-bottom: 2px solid #ffffff;
+    color: white;
+}
+
+.text-label {
+    padding-left: 10px;
+}
+
+.input-share {
+    width: 300px;
+}
+
+.post-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.form-section {
+    width: 772px;
+}
+
+
 .all-nav {
     width: 30%;
     margin: 30px auto;
@@ -72,6 +108,12 @@ body {
     align-items: center;
 }
 
+.search-input {
+    border: 2px solid #ffffff;
+    width: 300px;
+    border-radius: 12px;
+}
+
 .register-title {
     margin-right: 10px;
 }
@@ -95,13 +137,6 @@ nav i.material-icons {
     font-size: 24px;
 }
 
-.log-text {
-    margin: 0 auto;
-    text-align: center;
-    color: white;
-    font-size: 24px;
-}
-
 .button {
     background: linear-gradient(to top, #09203f 0%, #000000 100%);
     border: 1px solid white;
@@ -118,6 +153,79 @@ nav i.material-icons {
     align-items: center;
 }
 
+.button-search {
+    background: linear-gradient(to top, #09203f 0%, #000000 100%);
+    border: 1px solid white;
+    color: white;
+    margin-left: 26px;
+}
+
+.button-search:hover {
+    background: linear-gradient(to top, #3a7fc3 0%, #694ede 100%);
+}
+
+.button-image-profile:hover {
+    background: linear-gradient(to top, #3a7fc3 0%, #694ede 100%);
+}
+
+.button:hover {
+    background: linear-gradient(to top, #3a7fc3 0%, #694ede 100%);
+}
+
 .button-text {
     color: white;
+}
+
+.all-sections {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.exit-icon {
+    padding: 10px;
+}
+
+.log-text {
+    background: linear-gradient(to top, #09203f 0%, #000000 100%);
+    border: 1px solid white;
+    color: white;
+    padding: 4px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    top: 20px;
+    position: absolute;
+    right: 20px;
+    cursor: pointer;
+}
+
+.log-text:hover {
+    background: linear-gradient(to top, #3a7fc3 0%, #694ede 100%);
+}
+
+.logout-text {
+    margin-left: 8px;
+}
+
+.btn-width {
+    width: 100px;
+    height: 40px;
+}
+
+.file-field input.file-path {
+    border-bottom: 1px solid white;
+}
+
+.logout-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 400px;
+}
+
+.friend-modal {
+    margin: 32px;
 }

@@ -89,6 +89,20 @@ body {
     padding: 16px;
 }
 
+.card-content-beg {
+    display: flex;
+    justify-content: space-between;
+}
+
+.thumbs {
+    display: flex;
+    flex-direction: column;
+}
+
+.thumb {
+    border-radius: 6px;
+}
+
 .collection .collection-item {
     background-color: #182339;
 }
@@ -116,7 +130,16 @@ body {
 .card-width {
     width: 200px;
     margin-right: auto;
+    height: fit-content;
+    margin-top: 20px;
 }
+
+.card-width:hover {
+   transform: scale(1.05);
+   transition: 1s;
+   cursor: pointer;
+}
+
 
 .collection .collection-item.avatar {
     min-height: 0px;
@@ -307,6 +330,12 @@ nav i.material-icons {
 .btn-width {
     width: 100px;
     height: 40px;
+}
+
+.btn-width-2 {
+    width: 60px;
+    height: 40px;
+    cursor: pointer;
 }
 
 .file-field input.file-path {

@@ -38,7 +38,8 @@ if (!empty($friendIDs)) {
     $friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getCommentsForPost($postId, $db) {
+function getCommentsForPost($postId, $db)
+{
     $stmt = $db->prepare("
         SELECT * FROM comments 
         WHERE post_id = ?
@@ -149,14 +150,14 @@ function getCommentsForPost($postId, $db) {
                                 <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
                             <?php endif; ?>
                         </div>
-                        <div class="card-content grey lighten-3 black-text">
+                        <div class="card-content grey lighten-3 black-text card-content-beg">
                             <span class="card-title activator black-text">
                                 <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
                             </span>
-                            <span><i class="material-icons">thumb_up</i>:</span>
-                            <span><i class="material-icons">thumb_down</i>:</span>
-
-
+                            <div class="thumbs">
+                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_up</i></span>
+                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_down</i></span>
+                            </div>
                         </div>
                         <div class="card-action grey lighten-3">
                             <a href="#" class="like button-image-profile  btn-width like-unlike" data-post-id="<?= $post['id'] ?>"> Like</a>
@@ -179,7 +180,7 @@ function getCommentsForPost($postId, $db) {
                             <div class="input-field">
                                 <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
                                 <label for="comment-<?= $post['id'] ?>">Add a comment...</label>
-                                <button class="add-comment btn waves-effect waves-light" data-post-id="<?= $post['id'] ?>">Comment</button>
+                                <button class="add-comment btn waves-effect waves-light button-image-profile " data-post-id="<?= $post['id'] ?>">Comment</button>
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 <?php
+
 require_once "./db.php";
 require_once "./Upload.php";
 session_start();
@@ -6,39 +7,54 @@ if (!isset($_SESSION['user'])) {
     echo 'You must be logged in to perform this action.';
     exit;
 }
-
+//$userNamee = $_SESSION['userName'];
+ 
 $usersname = $_SESSION['user']['name'];
 $currentUser = $_SESSION['user']['id'];
 $friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
 $friendsStmt->execute(['currentUser' => $currentUser]);
 $friendRows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
 $friendIds = [];
-foreach ($friendRows as $row) {
+$frienduniqueID = [];
+
+foreach ($friendRows as $row) 
+{
+ //   $_SESSION['friendIds'] = $frienduniqueID;
     $friendId = $row['sender_id'] == $currentUser ? $row['receiver_id'] : $row['sender_id'];
     $friendIds[] = $friendId;
+
 }
+
 $_SESSION['friendIds'] = $friendIds;
-if (!empty($friendIds)) {
+
+if (!empty($friendIds)) 
+{
     $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
     $postsStmt = $db->prepare("SELECT * FROM posts WHERE user_id IN ($inQuery) ORDER BY timestamp DESC LIMIT 10");
     $postsStmt->execute($friendIds);
     $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
-    if (!empty($posts)) {
+    if (!empty($posts))
+     {
         $last = end($posts);
         $lastPost = $last['timestamp'];
     }
-} else {
+} 
+else 
+{
     $posts = [];
 }
 $stmt = $db->prepare("SELECT * FROM friend_requests WHERE receiver_id = :user_id AND status = 0");
 $stmt->execute([':user_id' => $_SESSION['user']['id']]);
+
 $friendRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $stmt = $db->prepare("SELECT CASE WHEN sender_id = :user_id THEN receiver_id ELSE sender_id END AS user_id FROM friend_requests WHERE status = 2 AND (sender_id = :user_id OR receiver_id = :user_id)");
 $stmt->execute([':user_id' => $_SESSION['user']['id']]);
+
 $friendIDs = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 $friends = [];
+
 if (!empty($friendIDs)) {
     $stmt = $db->prepare("SELECT id, name, email, profile FROM user WHERE id IN (" . implode(',', $friendIDs) . ")");
     $stmt->execute();
@@ -88,8 +104,10 @@ function getUserPosts($userID, $db)
 
 <body class="all-body">
     <nav class="all-nav">
+
         <div class="header-all">
             <div class="project-name">FREE-END</div>
+
         </div>
     </nav>
     <a class="log-text" href="logout.php">
@@ -97,20 +115,25 @@ function getUserPosts($userID, $db)
         <div><i id="icon" class="material-icons exit-icon">exit_to_app</i> </div>
     </a>
     <div id="timeline" class="cont-timeline">
+
         <li class="collection-item avatar">
             <!-- <span class="title modal-text">Current User:<?= htmlspecialchars($_SESSION['user']['name'], ENT_QUOTES, 'UTF-8') ?></span> -->
+
         </li>
         <div id="search" class="input-field all-sections">
             <div class="search-section">
+
                 <input id="search-input" type="text" class="validate" style="  border-bottom: 1px solid #ffffff; width: 300px; " placeholder="  Search for friends...">
                 <button id="search-button" class="btn waves-effect waves-light purple lighten-3 button-search"><i class="material-icons">search</i></button>
 
             </div>
             <div class="top-search-section">
                 <div class="logout-section">
+
                     <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger friend-modal button-image-profile"><i class="material-icons">notifications</i></a>
                     <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile friend-modal"><i class="material-icons">group</i></a>
                     <a href="#myPostsModal" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile friend-modal"><i class="material-icons">account_circle</i></a>
+
                 </div>
                 <div id="myPostsModal" class="modal friend-req-modal">
                     <div class="modal-content">
@@ -140,7 +163,7 @@ function getUserPosts($userID, $db)
                         <h4 class="modal-text">Friends</h4>
                         <?php if (!empty($friends)) : ?>
                             <ul class="collection">
-                                <?php foreach ($friends as $friend) : ?>
+                                <?php foreach ($friends as $friend)  : ?>
                                     <li class="collection-item avatar">
                                         <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
                                         <span class="title modal-text"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
@@ -151,6 +174,7 @@ function getUserPosts($userID, $db)
                             </ul>
                         <?php else : ?>
                             <p class="modal-text">No friends to show.</p>
+
                         <?php endif; ?>
                     </div>
                     <div class="modal-footer">
@@ -160,7 +184,11 @@ function getUserPosts($userID, $db)
                 <div id="modal-friend-requests" class="modal friend-req-modal">
                     <div class="modal-content">
                         <h4 class="modal-text">Friend Requests</h4>
-                        <?php if (!empty($friendRequests)) : ?>
+                        <?php 
+                      /*   $text = "heree";
+                        var_dump($text); */
+                        if (!empty($friendRequests)) : ?>
+
                             <ul class="collection modal-text">
                                 <?php foreach ($friendRequests as $request) : ?>
                                     <?php $requested = getUser($request['sender_id'], $db);  ?>
@@ -171,6 +199,7 @@ function getUserPosts($userID, $db)
                                         <button class="handleRequest btn waves-effect waves-light " data-action="accept" data-sender-id="<?= $request['sender_id'] ?>">Accept</button>
                                         <button class="handleRequest btn waves-effect waves-light " data-action="decline" data-sender-id="<?= $request['sender_id'] ?>">Decline</button>
                                     </li>
+
 
                                 <?php endforeach; ?>
                             </ul>
@@ -185,6 +214,7 @@ function getUserPosts($userID, $db)
 
             </div>
         </div>
+
         <div class="cont-timeline-second">
             <div id="search-results"></div>
             <form class="form-section" id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
@@ -192,37 +222,49 @@ function getUserPosts($userID, $db)
                     <textarea class="text-area" id="post-text" class="materialize-textarea" name="text" placeholder="Share something.."></textarea>
                 </div>
 
+
                 <div class="file-field input-field">
                     <div id="buttton-2" class="btn button-image-profile purple lighten-3 btn-width">
                         <span>Upload</span>
                         <input type="file" name="imagename">
                     </div>
+
                     <div class="file-path-wrapper">
                         <input class="file-path validate image-input" type="text" placeholder="Upload your image">
                     </div>
                 </div>
+
                 <button type="submit" class="btn waves-effect waves-light purple lighten-3 button-image-profile btn-width">Post</button>
             </form>
         </div>
         <div class="title">Posts of your friend's -- TIMELINE</div>
         <div class="all-cards row">
-            <?php if (!empty($posts)) foreach ($posts as $post) : ?>
+            <?php    /* $text = "heree";
+                        var_dump($text); */
+                         if (!empty($posts)) foreach ($posts as $post) : ?>
                 <?php
                 $postOwner = getUser($post['user_id'], $db);
                 ?>
                 <div class="col s4 card-width">
                     <div class="card">
+
                         <ul class="collection">
+
                             <li class="collection-item avatar">
                                 <img src="images/<?= htmlspecialchars($postOwner[0]['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
                                 <span class="title modal-text"><?= htmlspecialchars($postOwner[0]['name'], ENT_QUOTES, 'UTF-8') ?></span>
                                 <p class="modal-text"><?= htmlspecialchars($post['timestamp'], ENT_QUOTES, 'UTF-8') ?></p>
                             </li>
                         </ul>
+
                         <div id="buttton-2" class="card-image waves-effect waves-block waves-light">
-                            <?php if ($post['image']) : ?>
+                            <?php
+                              /*  $text = "heree";
+                               var_dump($text); */
+                                if ($post['image']) : ?>
                                 <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
-                            <?php endif; ?>
+                            <?php endif;
+                            ?>
                         </div>
                         <div id="buttton-2" class="card-content grey lighten-3 black-text card-content-beg">
                             <span class="card-title activator black-text">
@@ -241,15 +283,18 @@ function getUserPosts($userID, $db)
                             <h5>Comments</h5>
                             <ul id="comments-list-<?= $post['id'] ?>" class="comments-list-<?= $post['id'] ?>">
                                 <?php
+
                                 $comments = getCommentsForPost($post['id'], $db);
                                 foreach ($comments as $comment) :
+
                                 ?>
                                     <li>
                                         <span><strong><?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?>:</strong></span>
                                         <?= htmlspecialchars($comment['comment'], ENT_QUOTES, 'UTF-8') ?>
                                         <span class="timestamp" style="font-size: 6px;"> <?= $comment['timestamp'] ?></span>
                                     </li>
-                                <?php endforeach; ?>
+                                <?php endforeach;
+                                ?>
                             </ul>
                             <div id="buttton-2" class="input-field">
                                 <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
@@ -279,12 +324,14 @@ function getUserPosts($userID, $db)
                     var usersname = $(this).data('username');
                     var commentText = $('#comment-' + postId).val();
 
+
                     $.ajax({
                         url: 'handleComment.php',
                         method: 'post',
                         data: {
                             post_id: postId,
                             comment: commentText,
+
                             username: usersname,
                         },
                         success: function(response) {
@@ -296,23 +343,26 @@ function getUserPosts($userID, $db)
                             $('.comments-list-' + postId).prepend(addcomment);
                         },
                         error: function() {
-                            alert('An error occurred while adding the comment.');
+                            alert('An error occurred, here!!.');
                         }
                     });
                 });
+               /*  $text = "heree";
+                        var_dump($text); */
                 $('#search-button').on('click', function() {
                     $.ajax({
-                        url: 'handleSearch.php', // You need to create this PHP script
+                        url: 'handleSearch.php',
                         type: 'GET',
                         data: {
                             query: $('#search-input').val()
                         },
                         success: function(response) {
-                            // Display the search results
                             $('#search-results').html(response);
                         }
                     });
                 });
+               /*  $text = "heree";
+                        var_dump($text); */
                 $('#post-form').on('submit', function(e) {
                     e.preventDefault();
 
@@ -321,39 +371,44 @@ function getUserPosts($userID, $db)
                     formData.append('imagename', $('input[type=file]')[0].files[0]);
 
                     $.ajax({
-                        url: 'handlePost.php', // Server script to process the post
+                        url: 'handlePost.php',
                         type: 'post',
                         data: formData,
                         cache: false,
                         contentType: false,
+
                         processData: false,
                         success: function(response) {
-                            // Parse the response (assuming it's in JSON format)
+
                             var post = JSON.parse(response);
 
-                            // Create a new post element
                             var newPostHtml = `
+                         
                             <div class="col s8 m2">
                     <div class="card" style="border-radius: 7px; overflow: hidden;">
-                        <div class="card-image waves-effect waves-block waves-light">
+                        
+                    <div class="card-image waves-effect waves-block waves-light">
+
                             ${post.image ? '<img class="activator" src="images/' + post.image + '">' : ''}
                         </div>
                         <div class="card-content black lighten-3">
+
+
                             <span class="card-title activator grey-text text-darken-4">Your Post: ${post.content}<i class="material-icons right">more_vert</i></span>
                         </div>
                         <div class="card-action black lighten-3">
+
                             <a href="#" class="like">Like</a>
                             <a href="#" class="unlike">Unlike</a>
                         </div>
                     </div>
                 </div>`;
 
-                            // Prepend the new post to the timeline
                             $('#timeline').prepend(newPostHtml);
                         },
 
+
                         error: function(xhr, status, error) {
-                            // Handle any errors
                             console.error(error);
                         }
                     });
@@ -361,19 +416,17 @@ function getUserPosts($userID, $db)
                 $('.modal').modal();
                 $(document).on('click', '.add-friend', function() {
                     console.log("buraya girdi");
-                    var userId = $(this).data('user-id'); // Get user ID from data attribute
-
-                    // AJAX request
+                    var userId = $(this).data('user-id');
                     $.ajax({
-                        url: 'handleRequest.php', // URL of the PHP script
-                        type: 'post', // Request method
+                        url: 'handleRequest.php',
+                        type: 'post',
                         data: {
                             receiver_id: userId
-                        }, // Data to be sent to the server
-                        success: function(response) { // A function to be called if request succeeds
-                            alert(response); // Display the result
                         },
-                        error: function(jqXHR, textStatus, errorThrown) { // A function to be called if request fails
+                        success: function(response) {
+                            alert(response);
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
                             console.error('Error: ' + textStatus, errorThrown);
                         }
                     });
@@ -439,7 +492,8 @@ function getUserPosts($userID, $db)
                 });
 
                 $('.load-more').on('click', function() {
-
+                   /*  $text = "heree";
+                        var_dump($text); */
                     var lastpostTimeStamp = $(this).data('post');
 
                     $.ajax({

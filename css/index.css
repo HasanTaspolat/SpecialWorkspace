@@ -221,7 +221,13 @@ body {
 .register-title {
     margin-right: 10px;
 }
-
+.title {
+    font-size: 42px;
+    font-weight: 700;
+    margin: 0 auto;
+    text-align: center;
+    color: white;
+}
 .icon {
     margin-top: 10px;
 }

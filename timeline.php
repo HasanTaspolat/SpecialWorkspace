@@ -1,11 +1,13 @@
 <?php
 require_once "./db.php";
 require_once "./Upload.php";
-session_start(); // 
+session_start();
 if (!isset($_SESSION['user'])) {
     echo 'You must be logged in to perform this action.';
     exit;
 }
+
+$usersname = $_SESSION['user']['name'];
 $currentUser = $_SESSION['user']['id'];
 $friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
 $friendsStmt->execute(['currentUser' => $currentUser]);
@@ -15,11 +17,16 @@ foreach ($friendRows as $row) {
     $friendId = $row['sender_id'] == $currentUser ? $row['receiver_id'] : $row['sender_id'];
     $friendIds[] = $friendId;
 }
+$_SESSION['friendIds'] = $friendIds;
 if (!empty($friendIds)) {
     $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
     $postsStmt = $db->prepare("SELECT * FROM posts WHERE user_id IN ($inQuery) ORDER BY timestamp DESC LIMIT 10");
     $postsStmt->execute($friendIds);
     $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($posts)) {
+        $last = end($posts);
+        $lastPost = $last['timestamp'];
+    }
 } else {
     $posts = [];
 }
@@ -48,6 +55,24 @@ function getCommentsForPost($postId, $db)
     $stmt->execute([$postId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+function getUser($userID, $db)
+{
+    $stmt = $db->prepare("
+        SELECT * FROM user 
+        WHERE id = ?
+    ");
+    $stmt->execute([$userID]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getUserPosts($userID, $db)
+{
+    $stmt = $db->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY timestamp DESC");
+    $stmt->execute([$userID]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -72,15 +97,43 @@ function getCommentsForPost($postId, $db)
         <div><i id="icon" class="material-icons exit-icon">exit_to_app</i> </div>
     </a>
     <div id="timeline" class="cont-timeline">
+        <li class="collection-item avatar">
+            <!-- <span class="title modal-text">Current User:<?= htmlspecialchars($_SESSION['user']['name'], ENT_QUOTES, 'UTF-8') ?></span> -->
+        </li>
         <div id="search" class="input-field all-sections">
             <div class="search-section">
                 <input id="search-input" type="text" class="validate" style="  border-bottom: 1px solid #ffffff; width: 300px; " placeholder="  Search for friends...">
                 <button id="search-button" class="btn waves-effect waves-light purple lighten-3 button-search"><i class="material-icons">search</i></button>
+
             </div>
             <div class="top-search-section">
                 <div class="logout-section">
                     <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger friend-modal button-image-profile"><i class="material-icons">notifications</i></a>
                     <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile"><i class="material-icons">group</i></a>
+                    <a href="#myPostsModal" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile"><i class="material-icons">account_circle</i></a>
+                </div>
+                <div id="myPostsModal" class="modal">
+                    <div class="modal-content">
+                        <h4>My Posts</h4>
+                        <ul id="my-posts-list">
+                            <?php
+                            $myPosts = getUserPosts($currentUser, $db);
+                            foreach ($myPosts as $post) : ?>
+                                <li>
+                                    <div class="my-post">
+                                        <p><?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <?php if ($post['image']) : ?>
+                                            <img src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>" alt="Post image">
+                                        <?php endif; ?>
+                                        <button class="delete-post btn waves-effect waves-light" data-post-id="<?= $post['id'] ?>">Delete</button>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+                    </div>
                 </div>
                 <div id="modal-friends" class="modal friend-req-modal">
                     <div class="modal-content">
@@ -92,6 +145,7 @@ function getCommentsForPost($postId, $db)
                                         <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
                                         <span class="title modal-text"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
                                         <p class="modal-text"><?= htmlspecialchars($friend['email'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <button class="btn waves-effect waves-light remove-friend" data-friend-id="<?= $friend['id'] ?>"><i class="material-icons">remove</i></button>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -109,7 +163,15 @@ function getCommentsForPost($postId, $db)
                         <?php if (!empty($friendRequests)) : ?>
                             <ul class="collection modal-text">
                                 <?php foreach ($friendRequests as $request) : ?>
-                                    <li class="collection-item"><?= htmlspecialchars($request['sender_id'], ENT_QUOTES, 'UTF-8') ?></li>
+                                    <?php $requested = getUser($request['sender_id'], $db);  ?>
+                                    <li class="collection-item avatar" id="req-<?= $request['sender_id'] ?>">
+                                        <img src="images/<?= htmlspecialchars($requested[0]['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
+                                        <span class="title modal-text"><?= htmlspecialchars($requested[0]['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <p class="modal-text"><?= htmlspecialchars($requested[0]['email'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <button class="handleRequest btn waves-effect waves-light " data-action="accept" data-sender-id="<?= $request['sender_id'] ?>">Accept</button>
+                                        <button class="handleRequest btn waves-effect waves-light " data-action="decline" data-sender-id="<?= $request['sender_id'] ?>">Decline</button>
+                                    </li>
+
                                 <?php endforeach; ?>
                             </ul>
                         <?php else : ?>
@@ -124,6 +186,7 @@ function getCommentsForPost($postId, $db)
             </div>
         </div>
         <div class="cont-timeline-second">
+            <div id="search-results"></div>
             <form class="form-section" id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
                 <div class="input-field input-share">
                     <textarea class="text-area" id="post-text" class="materialize-textarea" name="text" placeholder="Share something.."></textarea>
@@ -141,10 +204,21 @@ function getCommentsForPost($postId, $db)
                 <button type="submit" class="btn waves-effect waves-light purple lighten-3 button-image-profile btn-width">Post</button>
             </form>
         </div>
+        <div class="title">Posts of your friend's -- TIMELINE</div>
         <div class="all-cards row">
             <?php if (!empty($posts)) foreach ($posts as $post) : ?>
+                <?php
+                $postOwner = getUser($post['user_id'], $db);
+                ?>
                 <div class="col s4 card-width">
                     <div class="card">
+                        <ul class="collection">
+                            <li class="collection-item avatar">
+                                <img src="images/<?= htmlspecialchars($postOwner[0]['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
+                                <span class="title modal-text"><?= htmlspecialchars($postOwner[0]['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <p class="modal-text"><?= htmlspecialchars($post['timestamp'], ENT_QUOTES, 'UTF-8') ?></p>
+                            </li>
+                        </ul>
                         <div class="card-image waves-effect waves-block waves-light">
                             <?php if ($post['image']) : ?>
                                 <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
@@ -165,7 +239,7 @@ function getCommentsForPost($postId, $db)
                         </div>
                         <div class="card-content grey lighten-3">
                             <h5>Comments</h5>
-                            <ul id="comments-list-<?= $post['id'] ?>">
+                            <ul id="comments-list-<?= $post['id'] ?>" class="comments-list-<?= $post['id'] ?>">
                                 <?php
                                 $comments = getCommentsForPost($post['id'], $db);
                                 foreach ($comments as $comment) :
@@ -179,14 +253,17 @@ function getCommentsForPost($postId, $db)
                             </ul>
                             <div class="input-field">
                                 <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
-                                <label for="comment-<?= $post['id'] ?>">Add a comment...</label>
-                                <button class="add-comment btn waves-effect waves-light button-image-profile " data-post-id="<?= $post['id'] ?>">Comment</button>
+                                <label for="comment-<?= $post['id'] ?>">Add a comment as<?= $usersname ?></label>
+                                <button class="add-comment btn waves-effect waves-light button-image-profile " data-post-id="<?= $post['id'] ?>" data-username="<?= $usersname ?>">Comment</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            <?php endforeach;
+            var_dump($lastPost) ?>
+            <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
         </div>
+
 
 
 
@@ -199,6 +276,7 @@ function getCommentsForPost($postId, $db)
                     e.preventDefault();
 
                     var postId = $(this).data('post-id');
+                    var usersname = $(this).data('username');
                     var commentText = $('#comment-' + postId).val();
 
                     $.ajax({
@@ -206,11 +284,12 @@ function getCommentsForPost($postId, $db)
                         method: 'post',
                         data: {
                             post_id: postId,
-                            comment: commentText
+                            comment: commentText,
+                            username: usersname,
                         },
                         success: function(response) {
                             var comment = JSON.parse(response);
-                            var addcomment = `<li> <span> ${comment.username}: </span>
+                            var addcomment = `<li> <span> ${comment.name}: </span>
                             ${comment.comment}
                             <span style="font-size: 9px"> Just now. <span>
                             `;
@@ -299,35 +378,141 @@ function getCommentsForPost($postId, $db)
                         }
                     });
                 });
+                $('.delete-post').click(function() {
+                    var postId = $(this).data('post-id');
 
-                $('#loadMore').on('click', function() {
                     $.ajax({
-                        url: 'load_more_posts.php', // You need to create this file
-                        type: 'POST',
+                        url: 'handleDelete.php',
+                        method: 'post',
                         data: {
-                            last_id: lastPostId
+                            post_id: postId
+                        },
+                        success: function() {
+                            alert('Post deleted.');
+                            location.reload();
+                        },
+                        error: function() {
+                            alert('An error occurred while deleting the post.');
+                        }
+                    });
+                });
+                $('.handleRequest').click(function(e) {
+                    e.preventDefault();
+
+                    var action = $(this).data('action');
+                    var senderId = $(this).data('sender-id');
+
+                    $.ajax({
+                        url: 'handleAcceptDecline.php',
+                        method: 'post',
+                        data: {
+                            action: action,
+                            sender_id: senderId
                         },
                         success: function(response) {
-                            // Parse response (which should be in JSON format) and append posts to timeline
-                            let posts = JSON.parse(response);
-                            posts.forEach(post => {
-                                let postHtml = `
-                                <div class="post card">
-                                    <div class="card-content">
-                                        <span class="card-title">${post.title}</span>
-                                        <p>${post.content}</p>
-                                    </div>
-                                    <div class="card-action">
-                                        <a href="#" class="like">Like</a>
-                                        <a href="#" class="unlike">Unlike</a>
-                                    </div>
-                                </div>`;
-                                $('#timeline').append(postHtml);
-                            });
+                            console.log("DONEEEEE")
+                            $("#req-" + senderId).hide(100);
+                        },
+                        error: function() {
+                            alert('An error occurred while handling the friend request.');
+                        }
+                    });
+                });
+                $('.remove-friend').click(function() {
 
+                    var friendId = $(this).data('friend-id');
+
+                    $.ajax({
+                        url: 'handleDelete.php',
+                        method: 'post',
+                        data: {
+                            friend_id: friendId
+                        },
+                        success: function() {
+                            alert('Friend deleted.');
+                            location.reload();
+                        },
+                        error: function() {
+                            alert('An error occurred while deleting the post.');
+                        }
+                    });
+                });
+
+                $('.load-more').on('click', function() {
+
+                    var lastpostTimeStamp = $(this).data('post');
+
+                    $.ajax({
+                        url: 'loadMore.php',
+                        type: 'POST',
+                        data: {
+                            lastPost: lastpostTimeStamp
+                        },
+                        success: function(response) {
+
+                            let posts = JSON.parse(response);
                             if (posts.length > 0) {
-                                lastPostId = posts[posts.length - 1].id;
-                            }
+                            newLast = posts[posts.length -1]['timestamp'];
+                            console.log(newLast);
+                            posts.forEach(post => {
+                                // Construct comments HTML
+                                let commentsHtml = '';
+                                post.comments.forEach(comment => {
+                                    commentsHtml += `
+            <li>
+                <span><strong>${comment.username}:</strong></span>
+                ${comment.comment}
+                <span class="timestamp" style="font-size: 6px;"> ${comment.timestamp}</span>
+            </li>`;
+                                });
+
+                                // Replace image and username placeholders with actual data
+                                // I'm assuming the owner info is included in the post object
+                                let postHtml = `
+                                    <div class="col s4 card-width">
+                                        <div class="card">
+                                            <ul class="collection">
+                                                <li class="collection-item avatar">
+                                                    <img src="images/${post.owner.profile}" alt="" class="circle">
+                                                    <span class="title modal-text">${post.owner.name}</span>
+                                                    <p class="modal-text">${post.timestamp}</p>
+                                                </li>
+                                            </ul>
+                                            <div class="card-image waves-effect waves-block waves-light">
+                                                ${post.image ? `<img class="activator post-image image-post-card" src="images/${post.image}">` : ''}
+                                            </div>
+                                            <div class="card-content grey lighten-3 black-text card-content-beg">
+                                                <span class="card-title activator black-text">${post.text}</span>
+                                                <div class="thumbs">
+                                                    <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_up</i></span>
+                                                    <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_down</i></span>
+                                                </div>
+                                            </div>
+                                            <div class="card-action grey lighten-3">
+                                                <a href="#" class="like button-image-profile btn-width like-unlike" data-post-id="${post.id}"> Like</a>
+                                                <a href="#" class="unlike button-image-profile btn-width like-unlike" data-post-id="${post.id}"> Unlike</a>
+                                            </div>
+                                            <div class="card-content grey lighten-3">
+                                                <h5>Comments</h5>
+                                                <ul id="comments-list-${post.id}" class="comments-list-${post.id}">
+                                                    ${commentsHtml}
+                                                </ul>
+                                                <div class="input-field">
+                                                    <textarea id="comment-${post.id}" class="materialize-textarea"></textarea>
+                                                    <label for="comment-${post.id}">Add a comment as ${post.owner.name}</label>
+                                                    <button class="add-comment btn waves-effect waves-light button-image-profile " data-post-id="${post.id}" data-username="${post.owner.name}">Comment</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                $('.load-more').data('post', newLast);
+                                $('.all-cards').append(postHtml);
+                                
+                            });
+                        } else {
+                            alert("No MORE TO LOAD :(")
+                        }
+
                         },
                         error: function(xhr, status, error) {
                             // Handle error

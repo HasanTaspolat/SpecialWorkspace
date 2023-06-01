@@ -10,7 +10,7 @@ extract($_POST);
 
 // Get the user ID and username from the session
 $userId =  $_SESSION['user']['id'];
-$username =  $_SESSION['user']['name']; // Adjust this according to where you stored the username
+
 
 // Prepare a statement to insert the new comment into the database
 $stmt = $db->prepare("

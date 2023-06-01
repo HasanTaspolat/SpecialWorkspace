@@ -68,8 +68,8 @@ body {
     overflow: hidden;
     height: 100%;
     margin-bottom: 100px;
-    background-color: #eee;
-    border: 6px solid #3333ab8c;
+    border: 6px solid #ffffff8c;
+    background-color: #182339;
 }
 
 .card .card-title {
@@ -130,14 +130,19 @@ body {
 .card-width {
     width: 200px;
     margin-right: auto;
-    height: fit-content;
+    height: 100%;
+    max-height: fit-content;
     margin-top: 20px;
 }
 
 .card-width:hover {
-   transform: scale(1.05);
-   transition: 1s;
-   cursor: pointer;
+    transform: scale(1.05);
+    transition: 1s;
+    cursor: pointer;
+}
+
+.load-more {
+    margin: -77px auto;
 }
 
 
@@ -221,13 +226,15 @@ body {
 .register-title {
     margin-right: 10px;
 }
+
 .title {
     font-size: 42px;
     font-weight: 700;
-    margin: 0 auto;
+    margin: 40px auto;
     text-align: center;
     color: white;
 }
+
 .icon {
     margin-top: 10px;
 }
@@ -245,6 +252,10 @@ nav i.material-icons {
     text-align: center;
     color: white;
     font-size: 24px;
+}
+
+.collection {
+    border: none;
 }
 
 .button {
@@ -356,4 +367,8 @@ nav i.material-icons {
 
 .friend-modal {
     margin: 32px;
+}
+
+.friend-modal-remove {
+    margin-top: 12px;
 }

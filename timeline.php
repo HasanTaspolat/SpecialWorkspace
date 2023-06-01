@@ -93,7 +93,7 @@ function getUserPosts($userID, $db)
         </div>
     </nav>
     <a class="log-text" href="logout.php">
-        <div class="logout-text"> LOGOUT </div>
+        <div id="buttton-2" class="logout-text"> LOGOUT </div>
         <div><i id="icon" class="material-icons exit-icon">exit_to_app</i> </div>
     </a>
     <div id="timeline" class="cont-timeline">
@@ -109,17 +109,17 @@ function getUserPosts($userID, $db)
             <div class="top-search-section">
                 <div class="logout-section">
                     <a href="#modal-friend-requests" class="btn-floating btn-large waves-effect waves-light modal-trigger friend-modal button-image-profile"><i class="material-icons">notifications</i></a>
-                    <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile"><i class="material-icons">group</i></a>
-                    <a href="#myPostsModal" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile"><i class="material-icons">account_circle</i></a>
+                    <a href="#modal-friends" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile friend-modal"><i class="material-icons">group</i></a>
+                    <a href="#myPostsModal" class="btn-floating btn-large waves-effect waves-light modal-trigger button-image-profile friend-modal"><i class="material-icons">account_circle</i></a>
                 </div>
-                <div id="myPostsModal" class="modal">
+                <div id="myPostsModal" class="modal friend-req-modal">
                     <div class="modal-content">
-                        <h4>My Posts</h4>
+                        <h4 class="modal-text">My Posts</h4>
                         <ul id="my-posts-list">
                             <?php
                             $myPosts = getUserPosts($currentUser, $db);
                             foreach ($myPosts as $post) : ?>
-                                <li>
+                                <li class="collection-item avatar">
                                     <div class="my-post">
                                         <p><?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?></p>
                                         <?php if ($post['image']) : ?>
@@ -132,7 +132,7 @@ function getUserPosts($userID, $db)
                         </ul>
                     </div>
                     <div class="modal-footer">
-                        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+                        <a href="#!" class="modal-close waves-effect waves-green btn-flat modal-text">Close</a>
                     </div>
                 </div>
                 <div id="modal-friends" class="modal friend-req-modal">
@@ -145,7 +145,7 @@ function getUserPosts($userID, $db)
                                         <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
                                         <span class="title modal-text"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
                                         <p class="modal-text"><?= htmlspecialchars($friend['email'], ENT_QUOTES, 'UTF-8') ?></p>
-                                        <button class="btn waves-effect waves-light remove-friend" data-friend-id="<?= $friend['id'] ?>"><i class="material-icons">remove</i></button>
+                                        <button class="btn waves-effect waves-light remove-friend button-image-profile friend-modal-remove" data-friend-id="<?= $friend['id'] ?>"><i class="material-icons">remove</i></button>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -193,7 +193,7 @@ function getUserPosts($userID, $db)
                 </div>
 
                 <div class="file-field input-field">
-                    <div class="btn button-image-profile purple lighten-3 btn-width">
+                    <div id="buttton-2" class="btn button-image-profile purple lighten-3 btn-width">
                         <span>Upload</span>
                         <input type="file" name="imagename">
                     </div>
@@ -219,12 +219,12 @@ function getUserPosts($userID, $db)
                                 <p class="modal-text"><?= htmlspecialchars($post['timestamp'], ENT_QUOTES, 'UTF-8') ?></p>
                             </li>
                         </ul>
-                        <div class="card-image waves-effect waves-block waves-light">
+                        <div id="buttton-2" class="card-image waves-effect waves-block waves-light">
                             <?php if ($post['image']) : ?>
                                 <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
                             <?php endif; ?>
                         </div>
-                        <div class="card-content grey lighten-3 black-text card-content-beg">
+                        <div id="buttton-2" class="card-content grey lighten-3 black-text card-content-beg">
                             <span class="card-title activator black-text">
                                 <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
                             </span>
@@ -251,7 +251,7 @@ function getUserPosts($userID, $db)
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
-                            <div class="input-field">
+                            <div id="buttton-2" class="input-field">
                                 <textarea id="comment-<?= $post['id'] ?>" class="materialize-textarea"></textarea>
                                 <label for="comment-<?= $post['id'] ?>">Add a comment as<?= $usersname ?></label>
                                 <button class="add-comment btn waves-effect waves-light button-image-profile " data-post-id="<?= $post['id'] ?>" data-username="<?= $usersname ?>">Comment</button>
@@ -260,11 +260,11 @@ function getUserPosts($userID, $db)
                     </div>
                 </div>
             <?php endforeach;
-            var_dump($lastPost) ?>
-            <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
+            ?>
+
         </div>
 
-
+        <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
 
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -452,23 +452,23 @@ function getUserPosts($userID, $db)
 
                             let posts = JSON.parse(response);
                             if (posts.length > 0) {
-                            newLast = posts[posts.length -1]['timestamp'];
-                            console.log(newLast);
-                            posts.forEach(post => {
-                                // Construct comments HTML
-                                let commentsHtml = '';
-                                post.comments.forEach(comment => {
-                                    commentsHtml += `
+                                newLast = posts[posts.length - 1]['timestamp'];
+                                console.log(newLast);
+                                posts.forEach(post => {
+                                    // Construct comments HTML
+                                    let commentsHtml = '';
+                                    post.comments.forEach(comment => {
+                                        commentsHtml += `
             <li>
                 <span><strong>${comment.username}:</strong></span>
                 ${comment.comment}
                 <span class="timestamp" style="font-size: 6px;"> ${comment.timestamp}</span>
             </li>`;
-                                });
+                                    });
 
-                                // Replace image and username placeholders with actual data
-                                // I'm assuming the owner info is included in the post object
-                                let postHtml = `
+                                    // Replace image and username placeholders with actual data
+                                    // I'm assuming the owner info is included in the post object
+                                    let postHtml = `
                                     <div class="col s4 card-width">
                                         <div class="card">
                                             <ul class="collection">
@@ -505,13 +505,13 @@ function getUserPosts($userID, $db)
                                             </div>
                                         </div>
                                     </div>`;
-                                $('.load-more').data('post', newLast);
-                                $('.all-cards').append(postHtml);
-                                
-                            });
-                        } else {
-                            alert("No MORE TO LOAD :(")
-                        }
+                                    $('.load-more').data('post', newLast);
+                                    $('.all-cards').append(postHtml);
+
+                                });
+                            } else {
+                                alert("No MORE TO LOAD :(")
+                            }
 
                         },
                         error: function(xhr, status, error) {

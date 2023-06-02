@@ -48,9 +48,9 @@ require_once "./auth.php";
 
   <?php
   if (isset($_SESSION["message"])) {
-    $err = $_SESSION["message"]; // I've consuemd that message! dont forget to unset it
+    $err = $_SESSION["message"];
     echo "<script> M.toast({html: '$err'}); </script>";
-    // delete key value pair, in case delete the message from the session
+    
     unset($_SESSION["message"]);
   }
   ?>

@@ -8,7 +8,7 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 //$userNamee = $_SESSION['userName'];
- 
+
 $usersname = $_SESSION['user']['name'];
 $currentUser = $_SESSION['user']['id'];
 $friendsStmt = $db->prepare("SELECT sender_id, receiver_id FROM friend_requests WHERE (sender_id = :currentUser OR receiver_id = :currentUser) AND status = 2");
@@ -17,30 +17,24 @@ $friendRows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
 $friendIds = [];
 $frienduniqueID = [];
 
-foreach ($friendRows as $row) 
-{
- //   $_SESSION['friendIds'] = $frienduniqueID;
+foreach ($friendRows as $row) {
+    //   $_SESSION['friendIds'] = $frienduniqueID;
     $friendId = $row['sender_id'] == $currentUser ? $row['receiver_id'] : $row['sender_id'];
     $friendIds[] = $friendId;
-
 }
 
 $_SESSION['friendIds'] = $friendIds;
 
-if (!empty($friendIds)) 
-{
+if (!empty($friendIds)) {
     $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
     $postsStmt = $db->prepare("SELECT * FROM posts WHERE user_id IN ($inQuery) ORDER BY timestamp DESC LIMIT 10");
     $postsStmt->execute($friendIds);
     $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
-    if (!empty($posts))
-     {
+    if (!empty($posts)) {
         $last = end($posts);
         $lastPost = $last['timestamp'];
     }
-} 
-else 
-{
+} else {
     $posts = [];
 }
 $stmt = $db->prepare("SELECT * FROM friend_requests WHERE receiver_id = :user_id AND status = 0");
@@ -88,7 +82,8 @@ function getUserPosts($userID, $db)
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getLikesDislikes($postId, $db) {
+function getLikesDislikes($postId, $db)
+{
     $stmt = $db->prepare("
         SELECT interaction_type, COUNT(*) as count
         FROM likes
@@ -113,7 +108,8 @@ function getLikesDislikes($postId, $db) {
 
     return $likesDislikes;
 }
-function userLiked($postId, $userId, $db) {
+function userLiked($postId, $userId, $db)
+{
     $stmt = $db->prepare("
         SELECT interaction_type
         FROM likes
@@ -179,17 +175,17 @@ function userLiked($postId, $userId, $db) {
                 <div id="myPostsModal" class="modal friend-req-modal">
                     <div class="modal-content">
                         <h4 class="modal-text">My Posts</h4>
-                        <ul id="my-posts-list">
+                        <ul id="my-posts-list" class="my-posts-list">
                             <?php
                             $myPosts = getUserPosts($currentUser, $db);
                             foreach ($myPosts as $post) : ?>
                                 <li class="collection-item avatar">
                                     <div class="my-post">
-                                        <p><?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <p class="posts-post-text"><?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?></p>
                                         <?php if ($post['image']) : ?>
-                                            <img src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>" alt="Post image">
+                                            <img class="posts-post-image" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>" alt="Post image">
                                         <?php endif; ?>
-                                        <button class="delete-post btn waves-effect waves-light" data-post-id="<?= $post['id'] ?>">Delete</button>
+                                        <button class="delete-post btn waves-effect waves-light button-image-profile btn-width-post" data-post-id="<?= $post['id'] ?>">Delete</button>
                                     </div>
                                 </li>
                             <?php endforeach; ?>
@@ -204,7 +200,7 @@ function userLiked($postId, $userId, $db) {
                         <h4 class="modal-text">Friends</h4>
                         <?php if (!empty($friends)) : ?>
                             <ul class="collection">
-                                <?php foreach ($friends as $friend)  : ?>
+                                <?php foreach ($friends as $friend) : ?>
                                     <li class="collection-item avatar">
                                         <img src="images/<?= htmlspecialchars($friend['profile'], ENT_QUOTES, 'UTF-8') ?>" alt="" class="circle">
                                         <span class="title modal-text"><?= htmlspecialchars($friend['name'], ENT_QUOTES, 'UTF-8') ?></span>
@@ -225,8 +221,8 @@ function userLiked($postId, $userId, $db) {
                 <div id="modal-friend-requests" class="modal friend-req-modal">
                     <div class="modal-content">
                         <h4 class="modal-text">Friend Requests</h4>
-                        <?php 
-                      /*   $text = "heree";
+                        <?php
+                        /*   $text = "heree";
                         var_dump($text); */
                         if (!empty($friendRequests)) : ?>
 
@@ -256,8 +252,8 @@ function userLiked($postId, $userId, $db) {
             </div>
         </div>
 
-        <div class="cont-timeline-second">
-            <div id="search-results"></div>
+        <div class="cont-timeline-second row">
+            <div id="search-results" class="search-results"></div>
             <form class="form-section" id="post-form" action="handlePost.php" method="POST" enctype="multipart/form-data">
                 <div class="input-field input-share">
                     <textarea class="text-area" id="post-text" class="materialize-textarea" name="text" placeholder="Share something.."></textarea>
@@ -271,7 +267,7 @@ function userLiked($postId, $userId, $db) {
                     </div>
 
                     <div class="file-path-wrapper">
-                        <input class="file-path validate image-input" type="text" placeholder="Upload your image">
+                        <input class="file-path validate image-input" type="text" placeholder="Upload your image...">
                     </div>
                 </div>
 
@@ -282,7 +278,7 @@ function userLiked($postId, $userId, $db) {
         <div class="all-cards row">
             <?php    /* $text = "heree";
                         var_dump($text); */
-                         if (!empty($posts)) foreach ($posts as $post) : ?>
+            if (!empty($posts)) foreach ($posts as $post) : ?>
                 <?php
                 $postOwner = getUser($post['user_id'], $db);
                 ?>
@@ -300,9 +296,9 @@ function userLiked($postId, $userId, $db) {
 
                         <div id="buttton-2" class="card-image waves-effect waves-block waves-light">
                             <?php
-                              /*  $text = "heree";
+                            /*  $text = "heree";
                                var_dump($text); */
-                                if ($post['image']) : ?>
+                            if ($post['image']) : ?>
                                 <img class="activator post-image image-post-card" src="images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>">
                             <?php endif;
                             ?>
@@ -318,9 +314,9 @@ function userLiked($postId, $userId, $db) {
                             </div>
                         </div>
                         <div class="card-action grey lighten-3 like-box">
-                            <?php if(userLiked($post['id'], $currentUser, $db)) { ?>
-                            <a href="#" class="like button-image-profile  btn-width like-unlike" data-post-id="<?= $post['id'] ?>"> Like</a>
-                            <a href="#" class="unlike button-image-profile  btn-width  like-unlike" data-post-id="<?= $post['id'] ?>"> Unlike</a>
+                            <?php if (userLiked($post['id'], $currentUser, $db)) { ?>
+                                <a href="#" class="like button-image-profile  btn-width like-unlike" data-post-id="<?= $post['id'] ?>"> Like</a>
+                                <a href="#" class="unlike button-image-profile  btn-width  like-unlike" data-post-id="<?= $post['id'] ?>"> Unlike</a>
                             <?php } ?>
                         </div>
                         <div class="card-content grey lighten-3">
@@ -352,8 +348,8 @@ function userLiked($postId, $userId, $db) {
             ?>
 
         </div>
-        <?php if(isset($posts)) { ?>
-        <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
+        <?php if (isset($posts)) { ?>
+            <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
         <?php } ?>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -391,8 +387,8 @@ function userLiked($postId, $userId, $db) {
                         }
                     });
                 });
-               /*  $text = "heree";
-                        var_dump($text); */
+                /*  $text = "heree";
+                         var_dump($text); */
                 $('#search-button').on('click', function() {
                     $.ajax({
                         url: 'handleSearch.php',
@@ -405,8 +401,8 @@ function userLiked($postId, $userId, $db) {
                         }
                     });
                 });
-               /*  $text = "heree";
-                        var_dump($text); */
+                /*  $text = "heree";
+                         var_dump($text); */
                 $('#post-form').on('submit', function(e) {
                     e.preventDefault();
 
@@ -438,7 +434,7 @@ function userLiked($postId, $userId, $db) {
                         <div class="card-content black lighten-3">
 
 
-                            <span class="card-title activator grey-text text-darken-4">Your Post: ${post.content}<i class="material-icons right">more_vert</i></span>
+                            <span class="card-title activator grey-text">Your Post: ${post.content}</span>
                         </div>
                         <div class="card-action black lighten-3">
 
@@ -549,16 +545,15 @@ function userLiked($postId, $userId, $db) {
                         },
                         success: function(response) {
                             type = JSON.parse(response);
-                            var value = $(".l-"+postId).text();
+                            var value = $(".l-" + postId).text();
                             console.log(value)
                             $('.like-box').hide(100);
                             if (type['type'] == "like") {
-                                var value = parseInt($(".l-"+postId).text(), 10) + 1;
-                                $(".l-"+postId).text(value);
-                            }
-                            else {
-                                var value = parseInt($(".d-"+postId).text(), 10) + 1;
-                                $(".d-"+postId).text(value);
+                                var value = parseInt($(".l-" + postId).text(), 10) + 1;
+                                $(".l-" + postId).text(value);
+                            } else {
+                                var value = parseInt($(".d-" + postId).text(), 10) + 1;
+                                $(".d-" + postId).text(value);
                             }
                         },
                         error: function(xhr, status, error) {
@@ -567,8 +562,8 @@ function userLiked($postId, $userId, $db) {
                     });
                 });
                 $('.load-more').on('click', function() {
-                   /*  $text = "burda yükledi";
-                        var_dump($text); */
+                    /*  $text = "burda yükledi";
+                         var_dump($text); */
                     var lastpostTimeStamp = $(this).data('post');
 
                     $.ajax({
@@ -578,8 +573,8 @@ function userLiked($postId, $userId, $db) {
                             lastPost: lastpostTimeStamp
                         },
                         success: function(response) {
-                     /*  $text = "girdi";
-                        var_dump($text); */
+                            /*  $text = "girdi";
+                               var_dump($text); */
                             let posts = JSON.parse(response);
                             if (posts.length > 0) {
                                 newLast = posts[posts.length - 1]['timestamp'];
@@ -595,7 +590,7 @@ function userLiked($postId, $userId, $db) {
                                             </li>`;
                                     });
 
-                                
+
                                     let postHtml = `
                                     <div class="col s4 card-width">
                                         <div class="card">
@@ -617,8 +612,8 @@ function userLiked($postId, $userId, $db) {
                                                 </div>
                                             </div>
                                             <div class="card-action grey lighten-3">
-                                                <a href="#" class="like button-image-profile btn-width like-unlike" data-post-id="${post.id}"> Like</a>
-                                                <a href="#" class="unlike button-image-profile btn-width like-unlike" data-post-id="${post.id}"> Unlike</a>
+                                                <a href="#" class="like button-image-profile btn-width like-unlike" class="thumb-text-text" data-post-id="${post.id}"> Like</a>
+                                                <a href="#" class="unlike button-image-profile btn-width like-unlike" class="thumb-text-text" data-post-id="${post.id}"> Unlike</a>
                                             </div>
                                             <div class="card-content grey lighten-3">
                                                 <h5>Comments</h5>

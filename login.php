@@ -1,5 +1,4 @@
 <?php
-    // Login.php know the authenctication but this auth info has to be sent to 'main.php'
 
     session_start();
 
@@ -10,13 +9,10 @@
     $rs = $db->prepare("select * from user where email = ?");
     $rs->execute([$email]);
     if( $rs->rowCount() === 1){ 
-        // valid email address
-        // checks if there is a user as for that email address?
         $user = $rs->fetch(PDO::FETCH_ASSOC);
         var_dump($user);
         if ( password_verify($password, $user["password"])){
-            //echo "user authenticated"; 
-            $_SESSION["user"] = $user; // login.php puts user data in global persistent data area 
+            $_SESSION["user"] = $user; 
             header("Location: timeline.php");
             exit;
         }
@@ -25,5 +21,4 @@
     }
 
     $_SESSION["message"] = "Login is failed! Check your credentials!";
-    //header("Location : index.php?err=login failed");
     header("Location: index.php");

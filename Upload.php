@@ -1,9 +1,6 @@
 <?php
 
 
-// For Validation
-
-// Third Part Components
 class Upload{
     private $filename = null;
     private $error = null;
@@ -11,13 +8,13 @@ class Upload{
 
     public function __construct($file, $uploadFolder)
     {
-        //var_dump($_FILES[$file]);
+     
         if(!empty($_FILES[$file]["name"])){
             $filename = $_FILES[$file]["name"];
             $tmp_name = $_FILES[$file]["tmp_name"];
             $size = $_FILES[$file]["size"];
 
-            $ext = pathinfo($filename, PATHINFO_EXTENSION); // return assos array structure
+            $ext = pathinfo($filename, PATHINFO_EXTENSION); 
             $whitelist = [
                 "gif",
                 "png", 
@@ -27,12 +24,12 @@ class Upload{
             ];
             if( !in_array($ext, $whitelist)){
                 $this->error ="wrong file type";
-            }else if( $size > 1024 * 1024) // 1mb
+            }else if( $size > 1024 * 1024) 
             {
                 $this->error = "too big";
             }else {
-                $this->filename = sha1("Project 256" . uniqid() . $ext); // sha1 generate String with 40 characters
-                //$this->$filename;
+                $this->filename = sha1("Project 256" . uniqid() . $ext); 
+  
                 if( !move_uploaded_file($tmp_name, $uploadFolder . "/" . $this->filename)){
                     $this->error = "system error";
                     $this->filename = null;

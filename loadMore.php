@@ -42,5 +42,5 @@ if (!empty($friendIds)) {
 
     echo json_encode($posts);
 } else {
-    echo json_encode([]); // return empty array
+    echo json_encode([]); 
 }

@@ -1,7 +1,7 @@
 <?php
     
-    setcookie("PHPSESSID", "", 1, "/"); // deleting the sessionID cookie
-    session_destroy(); // delete session file
+    setcookie("PHPSESSID", "", 1, "/"); 
+    session_destroy(); 
 
     header("Location: index.php");
 

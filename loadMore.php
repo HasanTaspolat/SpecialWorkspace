@@ -1,16 +1,13 @@
 <?php
-require_once 'db.php'; // adjust this to your actual db connection file
+require_once 'db.php';
 session_start();
 
 $last_timestamp = isset($_POST['lastPost']) ? $_POST['lastPost'] : 0;
-
-// This assumes you have the friend IDs stored in the session
 $friendIds = isset($_SESSION['friendIds']) ? $_SESSION['friendIds'] : [];
 
 if (!empty($friendIds)) {
     $inQuery = implode(',', array_fill(0, count($friendIds), '?'));
 
-    // Adjust this SQL query to fit your schema
     $postsStmt = $db->prepare("
         SELECT * 
         FROM posts 
@@ -19,13 +16,12 @@ if (!empty($friendIds)) {
         LIMIT 10
     ");
 
-    // Merge the last_timestamp to the parameters
     $params = array_merge($friendIds, [$last_timestamp]);
     $postsStmt->execute($params);
 
     $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch comments for each post and add it to the posts array
+
     foreach ($posts as &$post) {
         $commentsStmt = $db->prepare("
             SELECT * 
@@ -46,5 +42,5 @@ if (!empty($friendIds)) {
 
     echo json_encode($posts);
 } else {
-    echo json_encode([]);
+    echo json_encode([]); // return empty array
 }

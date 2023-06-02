@@ -88,7 +88,48 @@ function getUserPosts($userID, $db)
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function getLikesDislikes($postId, $db) {
+    $stmt = $db->prepare("
+        SELECT interaction_type, COUNT(*) as count
+        FROM likes
+        WHERE post_id = ?
+        GROUP BY interaction_type
+    ");
 
+    $stmt->execute([$postId]);
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $likesDislikes = [
+        'likes' => 0,
+        'dislikes' => 0,
+    ];
+
+    foreach ($result as $row) {
+        if ($row['interaction_type'] == 'like') {
+            $likesDislikes['likes'] = $row['count'];
+        } else if ($row['interaction_type'] == 'dislike') {
+            $likesDislikes['dislikes'] = $row['count'];
+        }
+    }
+
+    return $likesDislikes;
+}
+function userLiked($postId, $userId, $db) {
+    $stmt = $db->prepare("
+        SELECT interaction_type
+        FROM likes
+        WHERE post_id = ? AND user_id = ?
+    ");
+
+    $stmt->execute([$postId, $userId]);
+
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$result) {
+        return -1;
+    }
+
+    return $result['interaction_type'] === 'like' ? 0 : 1;
+}
 ?>
 
 <!DOCTYPE html>
@@ -271,13 +312,16 @@ function getUserPosts($userID, $db)
                                 <?= htmlspecialchars($post['text'], ENT_QUOTES, 'UTF-8') ?>
                             </span>
                             <div class="thumbs">
-                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_up</i></span>
-                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2">thumb_down</i></span>
+                                <?php $likesDislikes = getLikesDislikes($post['id'], $db); ?>
+                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2 ">thumb_up</i><span class="l-<?= $post['id'] ?>"><?= htmlspecialchars($likesDislikes['likes'], ENT_QUOTES, 'UTF-8') ?></span></span>
+                                <span><i class="material-icons icon-white button-image-profile thumb btn-width-2 ">thumb_down</i><span class="d-<?= $post['id'] ?>"><?= htmlspecialchars($likesDislikes['dislikes'], ENT_QUOTES, 'UTF-8') ?></span></span>
                             </div>
                         </div>
-                        <div class="card-action grey lighten-3">
+                        <div class="card-action grey lighten-3 like-box">
+                            <?php if(userLiked($post['id'], $currentUser, $db)) { ?>
                             <a href="#" class="like button-image-profile  btn-width like-unlike" data-post-id="<?= $post['id'] ?>"> Like</a>
                             <a href="#" class="unlike button-image-profile  btn-width  like-unlike" data-post-id="<?= $post['id'] ?>"> Unlike</a>
+                            <?php } ?>
                         </div>
                         <div class="card-content grey lighten-3">
                             <h5>Comments</h5>
@@ -308,9 +352,9 @@ function getUserPosts($userID, $db)
             ?>
 
         </div>
-
+        <?php if(isset($posts)) { ?>
         <button class="load-more btn waves-effect waves-light button-image-profile " data-post="<?= $lastPost ?>">LOAD MORE</button>
-
+        <?php } ?>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
@@ -445,7 +489,7 @@ function getUserPosts($userID, $db)
                             location.reload();
                         },
                         error: function() {
-                            alert('An error occurred while deleting the post.');
+                            alert('error.');
                         }
                     });
                 });
@@ -467,7 +511,7 @@ function getUserPosts($userID, $db)
                             $("#req-" + senderId).hide(100);
                         },
                         error: function() {
-                            alert('An error occurred while handling the friend request.');
+                            alert('error.');
                         }
                     });
                 });
@@ -490,9 +534,40 @@ function getUserPosts($userID, $db)
                         }
                     });
                 });
+                $('.like, .unlike').on('click', function(e) {
+                    e.preventDefault();
 
+                    let postId = $(this).data('post-id');
+                    let interactionType = $(this).hasClass('like') ? 'like' : 'dislike';
+
+                    $.ajax({
+                        url: 'handleLikes.php',
+                        type: 'POST',
+                        data: {
+                            post_id: postId,
+                            interaction_type: interactionType
+                        },
+                        success: function(response) {
+                            type = JSON.parse(response);
+                            var value = $(".l-"+postId).text();
+                            console.log(value)
+                            $('.like-box').hide(100);
+                            if (type['type'] == "like") {
+                                var value = parseInt($(".l-"+postId).text(), 10) + 1;
+                                $(".l-"+postId).text(value);
+                            }
+                            else {
+                                var value = parseInt($(".d-"+postId).text(), 10) + 1;
+                                $(".d-"+postId).text(value);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+                });
                 $('.load-more').on('click', function() {
-                   /*  $text = "heree";
+                   /*  $text = "burda yükledi";
                         var_dump($text); */
                     var lastpostTimeStamp = $(this).data('post');
 
@@ -503,25 +578,24 @@ function getUserPosts($userID, $db)
                             lastPost: lastpostTimeStamp
                         },
                         success: function(response) {
-
+                     /*  $text = "girdi";
+                        var_dump($text); */
                             let posts = JSON.parse(response);
                             if (posts.length > 0) {
                                 newLast = posts[posts.length - 1]['timestamp'];
                                 console.log(newLast);
                                 posts.forEach(post => {
-                                    // Construct comments HTML
                                     let commentsHtml = '';
                                     post.comments.forEach(comment => {
                                         commentsHtml += `
-            <li>
-                <span><strong>${comment.username}:</strong></span>
-                ${comment.comment}
-                <span class="timestamp" style="font-size: 6px;"> ${comment.timestamp}</span>
-            </li>`;
+                                            <li>
+                                                <span><strong>${comment.username}:</strong></span>
+                                                ${comment.comment}
+                                                <span class="timestamp" style="font-size: 6px;"> ${comment.timestamp}</span>
+                                            </li>`;
                                     });
 
-                                    // Replace image and username placeholders with actual data
-                                    // I'm assuming the owner info is included in the post object
+                                
                                     let postHtml = `
                                     <div class="col s4 card-width">
                                         <div class="card">
@@ -566,10 +640,8 @@ function getUserPosts($userID, $db)
                             } else {
                                 alert("No MORE TO LOAD :(")
                             }
-
                         },
                         error: function(xhr, status, error) {
-                            // Handle error
                             console.error(error);
                         }
                     });
